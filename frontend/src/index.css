@@ -1,0 +1,113 @@
+/* AegisGraph global stylesheet */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,700,900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Custom AegisGraph palette (dark obsidian + teal/amber) */
+    --aegis-bg: #04090a;
+    --aegis-surface: #0b1215;
+    --aegis-elevated: #121a1e;
+    --aegis-border: rgba(0, 240, 255, 0.15);
+    --aegis-border-hover: rgba(0, 240, 255, 0.3);
+    --aegis-text: #e2f1f8;
+    --aegis-text-muted: #8d9a9f;
+    --aegis-text-dim: #56646a;
+    --aegis-teal: #00f0ff;
+    --aegis-amber: #ffb347;
+    --aegis-matrix: #00e676;
+    --aegis-danger: #ff3366;
+
+    --background: 200 45% 3%;
+    --foreground: 200 50% 92%;
+    --card: 200 25% 6%;
+    --card-foreground: 200 50% 92%;
+    --popover: 200 25% 6%;
+    --popover-foreground: 200 50% 92%;
+    --primary: 185 100% 50%;
+    --primary-foreground: 200 45% 3%;
+    --secondary: 200 20% 12%;
+    --secondary-foreground: 200 50% 92%;
+    --muted: 200 20% 12%;
+    --muted-foreground: 200 10% 60%;
+    --accent: 200 20% 14%;
+    --accent-foreground: 200 50% 92%;
+    --destructive: 348 100% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 185 60% 18%;
+    --input: 200 20% 14%;
+    --ring: 185 100% 50%;
+    --radius: 0.375rem;
+  }
+}
+
+* { border-color: hsl(var(--border)); }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--aegis-bg);
+  color: var(--aegis-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display { font-family: "Cabinet Grotesk", "Manrope", sans-serif; letter-spacing: -0.02em; }
+.font-mono-data { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.02em; }
+
+/* Subtle noise texture overlay */
+.noise-overlay::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 3px 3px;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+
+.glass {
+  background-color: rgba(11, 18, 21, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--aegis-border);
+}
+
+.aegis-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.aegis-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.aegis-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.18);
+  border-radius: 4px;
+}
+.aegis-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 240, 255, 0.32); }
+
+.grid-lines {
+  background-image:
+    linear-gradient(to right,  rgba(0,240,255,0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,240,255,0.04) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.risk-low   { color:#00E676; background:rgba(0,230,118,0.08);  border-color:rgba(0,230,118,0.3); }
+.risk-med   { color:#FFB347; background:rgba(255,179,71,0.08); border-color:rgba(255,179,71,0.3); }
+.risk-high  { color:#FF3366; background:rgba(255,51,102,0.08); border-color:rgba(255,51,102,0.3); }
+
+@keyframes aegis-pulse { 0%,100% { opacity:.55 } 50% { opacity:1 } }
+.pulse-dot { animation: aegis-pulse 1.4s ease-in-out infinite; }
+
+@keyframes aegis-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: aegis-fade-up 0.4s ease-out both; }
+
+/* Selection */
+::selection { background: rgba(0,240,255,0.25); color: #fff; }

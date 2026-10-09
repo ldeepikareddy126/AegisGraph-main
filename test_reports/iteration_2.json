@@ -1,0 +1,39 @@
+{
+  "summary": "Attack Simulator + prompt-injection role-override iteration tested end-to-end. Backend: 15/15 pytest cases pass (access-gate for external/legal/unauth, scenarios endpoint returns 7 cards without full prompt, run endpoint returns control-benign=LOW/pass, prompt-injection-direct=HIGH with 'revoked' reasoning + vague summary (no names/SSN), pii-exfiltration=HIGH with revoked discount, 404 for unknown scenario, 401/403 auth gating, /api/query & /api/neo4j/status regressions intact, DB doc carries origin='simulator:*'). Frontend: /simulator locked for tok_ext_qa (nav-simulator hidden); tok_legal_qa sees 7 scenario cards, run-all button, click control-benign triggers run, simulator-result panel appears with RiskBadge LOW 0.34, sidebar shows nav-simulator.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/history", "issue": "Response projection (_HISTORY_FIELDS) does not include the 'origin' field. Simulator runs correctly persist origin='simulator:<id>' in Mongo (verified directly), but the /api/history API does not expose it to the frontend. Spec asks: 'Regression: /api/history includes queries from the simulator with origin field set (origin like simulator:*)'. Recommend adding 'origin' to _HISTORY_FIELDS so the UI can badge simulator-run rows."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_simulator.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/simulator_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL/MINOR: expose 'origin' in /api/history response so simulator-run rows can be visually distinguished from user-run rows (spec-aligned; no functional breakage today)."
+  ],
+  "critical_code_review_comments": [
+    "server.py: _run_pipeline persists 'origin' to the DB but /api/history strips it in the projection. Either add origin to _HISTORY_FIELDS or emit a boolean is_simulator flag; without it, the frontend can only tell simulator rows apart by inspecting the query text.",
+    "simulator.py: evaluate() considers an attack 'passed' as long as observed_level >= MEDIUM. This is intentional but should be documented — an attack scenario landing at MEDIUM (e.g. temporal-burst) is marked 'mitigated' even though redactions may only be partial. Consider a per-scenario minimum severity instead of a global MEDIUM floor.",
+    "risk_engine.py PROMPT_INJECTION_MARKERS: substring match on tokens like 'administrator', 'bypass', 'raw text' will also trigger on benign queries containing those words verbatim (e.g. a legal review of 'system administrator training memos'). For a legal/executive account this now applies a +0.10 penalty. Consider word-boundary regex or requiring at least two markers.",
+    "Simulator.jsx: runAll() runs scenarios sequentially inside a for-of loop with await, but 'running' state is a single scenario id — a mid-run 'Run all' triggered by pressing the button twice is protected only by the disabled attribute; consider a boolean 'allRunning' guard to prevent overlapping loops if that button is ever hit programmatically.",
+    "AppSidebar.jsx: nav-simulator visibility depends on an independent /api/simulator/access call inside the sidebar in addition to the one made by the Simulator page. Two round-trips on every mount; either share via context or cache in AuthContext."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_simulator.py (new)"
+  ],
+  "success_rate": {"backend": "100% (15/15)", "frontend": "100% (locked-view + legal-view + click-to-run + RiskBadge render, all data-testids present)"},
+  "test_credentials": "tok_ext_qa (external) and tok_legal_qa (legal) from /app/memory/test_credentials.md verified working.",
+  "seed_data_creation": "Tests delete db.query_history for user_id 'qa-user-2' before each critical LOW/HIGH assertion (per spec) to keep EWMA smoothing fresh.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New regression file: /app/backend/tests/test_simulator.py (pytest -n 2 friendly, 15 cases). Requires MongoDB reachable via MONGO_URL/DB_NAME to reset query_history between HIGH/LOW assertions. Simulator endpoints: GET /api/simulator/access (public probe, needs auth), GET /api/simulator/scenarios (legal/executive only, no 'prompt' field, has 'preview'), POST /api/simulator/run {scenario_id}. Role-gate constant lives in server.py:SIMULATOR_ROLES = {'legal','executive'}. Prompt-injection markers in aegis/risk_engine.py:PROMPT_INJECTION_MARKERS revoke negative role bump and add +0.10 instead. Frontend routes: /simulator with data-testids simulator-page, simulator-locked, simulator-run-all-btn, scenario-card-<id>, simulator-result, nav-simulator. Note: /api/history projection currently drops the persisted 'origin' field — consider adding it.",
+  "rca of the issue": "N/A – no bugs found. Feature works end-to-end. The one minor observation (origin not exposed via /api/history) is a nice-to-have gap between DB persistence and API surface; it does not affect any current test or user flow."
+}
